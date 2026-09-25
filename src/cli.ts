@@ -7,23 +7,37 @@ import * as store from "./store.ts";
 const tok = (chars: number) => Math.round(chars / 4); // estimate: ~4 characters per token
 const fmt = (n: number) => n.toLocaleString("en-US");
 
+const k = (chars: number) => (chars >= 1000 ? `${(chars / 1000).toFixed(1)}k` : `${chars}`);
+const bar = (part: number, width = 20) => "█".repeat(Math.round(part * width)).padEnd(width, "░");
+
 export function gain(entries: store.LogEntry[], sid?: string): string {
   const rows = sid ? entries.filter((e) => e.sid === sid) : entries;
+  const cut = rows.filter((e) => e.after < e.before);
+  const before = rows.reduce((a, e) => a + e.before, 0);
   const saved = rows.reduce((a, e) => a + e.before - e.after, 0);
-  const jevTokens = rows.reduce((a, e) => a + (e.jevTokens ?? 0), 0);
-  const count = (f: (e: store.LogEntry) => boolean) => rows.filter(f).length;
-  const cut = count((e) => e.after < e.before);
-  const cost = jevTokens * JEV_PRICE_PER_TOKEN;
-  return [
+  const cutBefore = cut.reduce((a, e) => a + e.before, 0);
+  const jev = rows.filter((e) => e.engine === "jev");
+  const cost = jev.reduce((a, e) => a + (e.jevTokens ?? 0), 0) * JEV_PRICE_PER_TOKEN;
+  const share = before ? saved / before : 0;
+  const avgCut = cutBefore ? saved / cutBefore : 0;
+  const line = "─".repeat(52);
+  const out = [
     `compactio · ${sid ? "this session" : "all sessions"}`,
-    `  tool outputs seen          ${fmt(rows.length)}`,
-    `  outputs made smaller       ${fmt(cut)}`,
-    `  tokens kept out of context ~${fmt(tok(saved))}`,
-    `  Jev decisions              ${fmt(count((e) => e.engine === "jev"))}   cost $${cost.toFixed(4)}`,
-    `  unchanged re-reads skipped ${fmt(count((e) => e.level === "unchanged"))}`,
-    `  fail-open                  ${fmt(count((e) => e.engine === "fail-open"))}`,
-    `  (tokens are estimated as characters / 4)`,
-  ].join("\n");
+    line,
+    `  Tokens kept out of context   ~${fmt(tok(saved))}`,
+    `  Share of tool output cut     ${bar(share)} ${Math.round(share * 100)}%`,
+    `  Outputs cut                  ${cut.length} of ${rows.length}  (avg cut ${Math.round(avgCut * 100)}%)`,
+    `  Jev decisions                ${jev.length}  ·  $${cost.toFixed(4)}`,
+    `  Unchanged re-reads skipped   ${rows.filter((e) => e.level === "unchanged").length}`,
+    `  Fail-open                    ${rows.filter((e) => e.engine === "fail-open").length}`,
+  ];
+  const top = [...cut].sort((a, b) => b.before - b.after - (a.before - a.after)).slice(0, 3);
+  if (top.length) {
+    out.push(line, "  Biggest cuts");
+    for (const e of top) out.push(`    ${e.tool.padEnd(6)} ${(e.engine === "lossless" ? "clean" : e.level).padEnd(9)} ${k(e.before).padStart(6)} → ${k(e.after).padEnd(6)} chars  (${e.engine})`);
+  }
+  out.push(line, "  tokens ≈ characters ÷ 4");
+  return out.join("\n");
 }
 
 const [cmd, arg] = process.argv.slice(2);

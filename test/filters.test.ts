@@ -27,3 +27,13 @@ test("redact masks keys and assignments", () => {
   const out = redact("API_KEY=abcd1234xyz and ghp_abcdefghijklmnopqrstuvwx and Bearer abcdefghijklmnop");
   assert.equal(out, "API_KEY=[REDACTED] and [REDACTED] and [REDACTED]");
 });
+
+test("gain sums the cuts and lists the biggest one first", async () => {
+  const { gain } = await import("../src/cli.ts");
+  const e = (before: number, after: number, level = "headtail") =>
+    ({ ts: "", sid: "s", tool: "Bash", engine: "jev", level, before, after, ms: 1, jevTokens: 1000 }) as const;
+  const out = gain([e(20000, 1000, "errors"), e(8000, 8000, "full"), e(4000, 2000)]);
+  assert.match(out, /Tokens kept out of context   ~5,250/);
+  assert.match(out, /Outputs cut                  2 of 3/);
+  assert.match(out, /Biggest cuts\n    Bash   errors     20\.0k → 1\.0k/);
+});
