@@ -1,9 +1,13 @@
 {
   "name": "compactio",
-  "version": "0.0.1",
-  "description": "Cut agent token use with Jev. Plugin for Claude Code, Codex, and other coding agents. Work in progress.",
-  "keywords": ["claude-code", "codex", "agent", "tokens", "compaction", "jev", "typesafe"],
+  "version": "0.1.0",
+  "description": "System 1 for your coding agent. Cuts tool output the task does not need, before it enters the context. Powered by Jev.",
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": { "test": "node --test test/*.test.ts" },
+  "keywords": ["claude-code", "codex", "agent", "tokens", "context", "compaction", "jev", "typesafe", "system-1"],
   "author": "Rama Aditya",
   "license": "MIT",
-  "files": ["README.md"]
+  "repository": { "type": "git", "url": "git+https://github.com/RamaAditya49/compactio.git" },
+  "files": ["src", "hooks", "commands", ".claude-plugin", "README.md", "BLUEPRINT.md", "LICENSE"]
 }

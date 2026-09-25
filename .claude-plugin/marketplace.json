@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "compactio",
+  "description": "System 1 for coding agents.",
+  "owner": { "name": "Rama Aditya", "url": "https://github.com/RamaAditya49" },
+  "plugins": [
+    {
+      "name": "compactio",
+      "description": "Cuts tool output the task does not need, before it enters the context. Powered by Jev.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
