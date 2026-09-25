@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-label="Terminal demo: compactio cuts a 20,501-character test log to 747 characters">
+<title>Terminal demo: compactio cuts a 20,501-character test log to 747 characters</title>
+<style>
+text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+.e0{animation:k0 16s linear infinite}@keyframes k0{0%,1.88%{opacity:0}3.08%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e1{animation:k1 16s linear infinite}@keyframes k1{0%,7.50%{opacity:0}8.70%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e2{animation:k2 16s linear infinite}@keyframes k2{0%,10.00%{opacity:0}11.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e3{animation:k3 16s linear infinite}@keyframes k3{0%,11.00%{opacity:0}12.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e4{animation:k4 16s linear infinite}@keyframes k4{0%,12.00%{opacity:0}13.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e5{animation:k5 16s linear infinite}@keyframes k5{0%,13.00%{opacity:0}14.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e6{animation:k6 16s linear infinite}@keyframes k6{0%,14.00%{opacity:0}15.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e7{animation:k7 16s linear infinite}@keyframes k7{0%,15.00%{opacity:0}16.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e8{animation:k8 16s linear infinite}@keyframes k8{0%,16.00%{opacity:0}17.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e9{animation:k9 16s linear infinite}@keyframes k9{0%,17.00%{opacity:0}18.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e10{animation:k10 16s linear infinite}@keyframes k10{0%,18.00%{opacity:0}19.20%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e11{animation:k11 16s linear infinite}@keyframes k11{0%,19.38%{opacity:0}20.58%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e12{animation:k12 16s linear infinite}@keyframes k12{0%,20.63%{opacity:0}21.83%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e13{animation:k13 16s linear infinite}@keyframes k13{0%,23.75%{opacity:0}24.95%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e14{animation:k14 16s linear infinite}@keyframes k14{0%,27.50%{opacity:0}28.70%,33.13%{opacity:1}34.33%,100%{opacity:0}}
+.e15{animation:k15 16s linear infinite}@keyframes k15{0%,35.00%{opacity:0}36.20%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e16{animation:k16 16s linear infinite}@keyframes k16{0%,36.25%{opacity:0}37.45%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e17{animation:k17 16s linear infinite}@keyframes k17{0%,37.50%{opacity:0}38.70%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e18{animation:k18 16s linear infinite}@keyframes k18{0%,38.75%{opacity:0}39.95%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e19{animation:k19 16s linear infinite}@keyframes k19{0%,43.13%{opacity:0}44.33%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e20{animation:k20 16s linear infinite}@keyframes k20{0%,51.25%{opacity:0}52.45%,97%{opacity:1}99.5%,100%{opacity:0}}
+.e21{animation:k21 16s linear infinite}@keyframes k21{0%,53.13%{opacity:0}54.33%,97%{opacity:1}99.5%,100%{opacity:0}}
+
+</style>
+
+<rect width="960" height="540" rx="14" fill="#0b0f14"/>
+<rect x=".5" y=".5" width="959" height="539" rx="14" fill="none" stroke="#1f2733"/>
+<rect x="1" y="1" width="958" height="40" rx="13" fill="#11161d"/>
+<rect x="1" y="28" width="958" height="13" fill="#11161d"/>
+<line x1="0" y1="41" x2="960" y2="41" stroke="#1f2733"/>
+<circle cx="26" cy="21" r="6" fill="#ff5f57"/><circle cx="46" cy="21" r="6" fill="#febc2e"/><circle cx="66" cy="21" r="6" fill="#28c840"/>
+<text x="480" y="26" font-size="13" fill="#8b949e" text-anchor="middle" class="mono">claude code · with compactio</text>
+<g class="e0"><text x="32" y="84" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve"><tspan fill="#8b949e">›</tspan> Run the tests and tell me why they fail.</text></g>
+<g class="e1"><text x="32" y="122.4" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve"><tspan fill="#f59e0b">●</tspan> Bash(<tspan fill="#8b949e">npm test</tspan>)</text></g>
+<g class="e2"><text x="32" y="146.4" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module1.spec.ts (12 ms)</text></g>
+<g class="e3"><text x="32" y="167.04000000000002" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module2.spec.ts (12 ms)</text></g>
+<g class="e4"><text x="32" y="187.68" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module3.spec.ts (12 ms)</text></g>
+<g class="e5"><text x="32" y="208.32" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module4.spec.ts (12 ms)</text></g>
+<g class="e6"><text x="32" y="228.96" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module5.spec.ts (12 ms)</text></g>
+<g class="e7"><text x="32" y="249.60000000000002" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module6.spec.ts (12 ms)</text></g>
+<g class="e8"><text x="32" y="270.24" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module7.spec.ts (12 ms)</text></g>
+<g class="e9"><text x="32" y="290.88" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module8.spec.ts (12 ms)</text></g>
+<g class="e10"><text x="32" y="311.52" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  PASS test/unit/module9.spec.ts (12 ms)</text></g>
+<g class="e11"><text x="32" y="332.15999999999997" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  … 492 more PASS lines …</text></g>
+<g class="e12"><text x="32" y="352.8" class="mono" font-size="15" fill="#4b5563" xml:space="preserve">  FAIL test/db/pool.spec.ts</text></g>
+<g class="e13"><text x="32" y="379.63200000000006" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve">  <tspan fill="#f59e0b">⎿ 503 lines · 20,501 chars</tspan></text></g>
+<g class="e14"><g><rect x="24" y="392.592" width="912" height="28" rx="6" fill="#34d399" opacity=".10"/>
+<text x="32" y="410.592" class="mono" font-size="15" fill="#34d399" xml:space="preserve">◆ compactio · Jev decides → <tspan font-weight="700">errors</tspan>   <tspan fill="#8b949e">0.75 s · $0.00005</tspan></text></g></g>
+<g class="e15"><text x="32" y="146.4" class="mono" font-size="15" fill="#f87171" xml:space="preserve">  FAIL test/db/pool.spec.ts</text></g>
+<g class="e16"><text x="32" y="170.4" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve">    Error: connect ECONNREFUSED 127.0.0.1:5432</text></g>
+<g class="e17"><text x="32" y="194.4" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve">  Tests: 1 failed, 500 passed, 501 total</text></g>
+<g class="e18"><text x="32" y="218.4" class="mono" font-size="15" fill="#8b949e" xml:space="preserve">  [compactio: kept &quot;errors&quot; view of 503 lines. Full output: … show f0c58b38]</text></g>
+<g class="e19"><text x="32" y="252" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve">  <tspan fill="#34d399">⎿ agent reads 747 chars  (−96%)</tspan></text></g>
+<g class="e20"><text x="32" y="295.20000000000005" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve"><tspan fill="#f59e0b">●</tspan> The pool test fails because Postgres is not running on 127.0.0.1:5432.</text></g>
+<g class="e21"><text x="32" y="319.20000000000005" class="mono" font-size="15" fill="#e6edf3" xml:space="preserve">  <tspan fill="#8b949e">Start it with docker compose up -d db, then run the tests again.</tspan></text></g>
+
+</svg>

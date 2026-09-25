@@ -24,7 +24,7 @@ async function fakeJev(choice: string, confidence = 0.9) {
     let body = "";
     req.on("data", (c) => (body += c));
     req.on("end", () => {
-      seen.push(JSON.parse(body));
+      seen.push({ ...JSON.parse(body), headers: req.headers });
       res.setHeader("content-type", "application/json");
       res.end(JSON.stringify({ answers: { keep: { type: "choice", choice, confidence } }, usage: { input_tokens: 800 } }));
     });
@@ -60,6 +60,18 @@ test("Jev choice is applied, and secrets are redacted before sending", async () 
   const sent = JSON.stringify(jev.seen[0]);
   assert.ok(!sent.includes("supersecret1"));
   assert.deepEqual(Object.keys(jev.seen[0].questions.keep.criteria), ["full", "errors", "headtail", "stub"]);
+});
+
+test("OpenRouter key: Decisions endpoint, OpenRouter model name, compactio attribution", async () => {
+  const jev = await fakeJev("headtail");
+  const out: any = await postTool(bash(big(500)), { OPENROUTER_API_KEY: "sk-or-x", COMPACTIO_JEV_URL: jev.url });
+  jev.close();
+  assert.match(out.hookSpecificOutput.updatedToolOutput.stdout, /kept "headtail"/);
+  const req = jev.seen[0];
+  assert.equal(req.model, "~typesafe/jev-latest");
+  assert.equal(req.headers["authorization"], "Bearer sk-or-x");
+  assert.equal(req.headers["x-openrouter-title"], "compactio");
+  assert.equal(req.headers["http-referer"], "https://github.com/RamaAditya49/compactio");
 });
 
 test("low confidence keeps the full output", async () => {

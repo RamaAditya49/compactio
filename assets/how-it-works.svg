@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="380" viewBox="0 0 1280 380" role="img" aria-label="How compactio works: after each tool call, code and Jev decide how much output the LLM reads">
+<title>How compactio works: after each tool call, code and Jev decide how much output the LLM reads</title>
+<style>
+text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+.pulse{animation:move 8s cubic-bezier(.5,0,.5,1) infinite}@keyframes move{0%{transform:translateX(0);opacity:0}6%{opacity:1}90%{transform:translateX(1000px);opacity:1}100%{transform:translateX(1000px);opacity:0}}
+.v0{animation:v0 8s steps(1) infinite}@keyframes v0{0%{opacity:.35}0%{opacity:1}25%{opacity:.35}}
+.v1{animation:v1 8s steps(1) infinite}@keyframes v1{0%{opacity:.35}25%{opacity:1}50%{opacity:.35}}
+.v2{animation:v2 8s steps(1) infinite}@keyframes v2{0%{opacity:.35}50%{opacity:1}75%{opacity:.35}}
+.v3{animation:v3 8s steps(1) infinite}@keyframes v3{0%{opacity:.35}75%{opacity:1}100%{opacity:.35}}
+
+</style>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5563"/></marker></defs>
+<rect width="1280" height="380" rx="18" fill="#0b0f14"/>
+<rect x=".5" y=".5" width="1279" height="379" rx="18" fill="none" stroke="#1f2733"/>
+<text x="640" y="50" font-size="20" font-weight="600" fill="#e6edf3" text-anchor="middle">After every tool call, before the model sees the result</text>
+<rect x="52" y="84" width="176" height="118" rx="12" fill="#11161d" stroke="#1f2733" stroke-opacity="1"/>
+<text x="70" y="116" font-size="13" fill="#8b949e" class="mono">01 · Tool runs</text>
+<text x="70" y="150" font-size="17" font-weight="600" fill="#e6edf3">Bash · Grep · Web · MCP</text>
+<text x="70" y="176" font-size="13" fill="#8b949e">any output</text>
+<path d="M232 143h16" stroke="#4b5563" stroke-width="2" marker-end="url(#arr)"/><rect x="252" y="84" width="176" height="118" rx="12" fill="#11161d" stroke="#1f2733" stroke-opacity="1"/>
+<text x="270" y="116" font-size="13" fill="#8b949e" class="mono">02 · Code</text>
+<text x="270" y="150" font-size="17" font-weight="600" fill="#e6edf3">skip small output</text>
+<text x="270" y="176" font-size="13" fill="#8b949e">and unchanged re-reads</text>
+<path d="M432 143h16" stroke="#4b5563" stroke-width="2" marker-end="url(#arr)"/><rect x="452" y="84" width="176" height="118" rx="12" fill="#11161d" stroke="#1f2733" stroke-opacity="1"/>
+<text x="470" y="116" font-size="13" fill="#8b949e" class="mono">03 · Code</text>
+<text x="470" y="150" font-size="17" font-weight="600" fill="#e6edf3">lossless clean</text>
+<text x="470" y="176" font-size="13" fill="#8b949e">ANSI · repeats · blanks</text>
+<path d="M632 143h16" stroke="#4b5563" stroke-width="2" marker-end="url(#arr)"/><rect x="652" y="84" width="176" height="118" rx="12" fill="#11161d" stroke="#34d399" stroke-opacity="0.8"/>
+<text x="670" y="116" font-size="13" fill="#34d399" class="mono">04 · Jev</text>
+<text x="670" y="150" font-size="17" font-weight="600" fill="#e6edf3">chooses the view</text>
+<text x="670" y="176" font-size="13" fill="#8b949e">~0.5 s · no generation</text>
+<path d="M832 143h16" stroke="#4b5563" stroke-width="2" marker-end="url(#arr)"/><rect x="852" y="84" width="176" height="118" rx="12" fill="#11161d" stroke="#1f2733" stroke-opacity="1"/>
+<text x="870" y="116" font-size="13" fill="#8b949e" class="mono">05 · Code</text>
+<text x="870" y="150" font-size="17" font-weight="600" fill="#e6edf3">apply + store</text>
+<text x="870" y="176" font-size="13" fill="#8b949e">original stays on disk</text>
+<path d="M1032 143h16" stroke="#4b5563" stroke-width="2" marker-end="url(#arr)"/><rect x="1052" y="84" width="176" height="118" rx="12" fill="#11161d" stroke="#f59e0b" stroke-opacity="0.8"/>
+<text x="1070" y="116" font-size="13" fill="#f59e0b" class="mono">06 · LLM</text>
+<text x="1070" y="150" font-size="17" font-weight="600" fill="#e6edf3">reads only this</text>
+<text x="1070" y="176" font-size="13" fill="#8b949e">System 2</text>
+<line x1="140" y1="228" x2="1140" y2="228" stroke="#1f2733" stroke-width="2"/>
+<circle class="pulse" cx="140" cy="228" r="6" fill="#34d399"/><text x="640" y="278" font-size="13" fill="#8b949e" text-anchor="middle" class="mono">the four views</text><g class="v0"><rect x="319" y="292" width="150" height="52" rx="10" fill="#11161d" stroke="#34d399" stroke-opacity=".7"/>
+<text x="394" y="315" font-size="15" font-weight="700" fill="#34d399" text-anchor="middle" class="mono">full</text>
+<text x="394" y="334" font-size="12" fill="#8b949e" text-anchor="middle">all of it</text></g><g class="v1"><rect x="483" y="292" width="150" height="52" rx="10" fill="#11161d" stroke="#34d399" stroke-opacity=".7"/>
+<text x="558" y="315" font-size="15" font-weight="700" fill="#34d399" text-anchor="middle" class="mono">errors</text>
+<text x="558" y="334" font-size="12" fill="#8b949e" text-anchor="middle">errors + tail</text></g><g class="v2"><rect x="647" y="292" width="150" height="52" rx="10" fill="#11161d" stroke="#34d399" stroke-opacity=".7"/>
+<text x="722" y="315" font-size="15" font-weight="700" fill="#34d399" text-anchor="middle" class="mono">headtail</text>
+<text x="722" y="334" font-size="12" fill="#8b949e" text-anchor="middle">start + end</text></g><g class="v3"><rect x="811" y="292" width="150" height="52" rx="10" fill="#11161d" stroke="#34d399" stroke-opacity=".7"/>
+<text x="886" y="315" font-size="15" font-weight="700" fill="#34d399" text-anchor="middle" class="mono">stub</text>
+<text x="886" y="334" font-size="12" fill="#8b949e" text-anchor="middle">one line</text></g>
+</svg>

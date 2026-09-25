@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { apply, hasErrors, lossless, preview, type Level } from "./filters.ts";
-import { decide } from "./jev.ts";
+import { decide, endpoint } from "./jev.ts";
 import { redact } from "./redact.ts";
 import * as store from "./store.ts";
 
@@ -91,8 +91,8 @@ export async function postTool(ev: Event, env = process.env): Promise<unknown | 
   let level: Level = "full";
   let engine: store.LogEntry["engine"] = "local";
   const extra: Partial<store.LogEntry> = {};
-  const key = env.TYPESAFE_API_KEY;
-  if (key) {
+  const ep = endpoint(env);
+  if (ep) {
     try {
       const state = {
         goal: redact(store.loadSession(ev.session_id).goal ?? "unknown"),
@@ -100,12 +100,7 @@ export async function postTool(ev: Event, env = process.env): Promise<unknown | 
         tool_input: redact(JSON.stringify(ev.tool_input ?? {})).slice(0, 600),
         output: Object.fromEntries(Object.entries(preview(text)).map(([k, v]) => [k, typeof v === "string" ? redact(v) : v])),
       };
-      const d = await decide(state, levels, {
-        key,
-        timeoutMs: Number(env.COMPACTIO_TIMEOUT_MS ?? 1500),
-        url: env.COMPACTIO_JEV_URL,
-        model: env.COMPACTIO_JEV_MODEL,
-      });
+      const d = await decide(state, levels, ep, Number(env.COMPACTIO_TIMEOUT_MS ?? 1500));
       engine = "jev";
       extra.jevTokens = d.inputTokens;
       level = d.confidence >= MIN_CONFIDENCE ? d.level : "full";
