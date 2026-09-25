@@ -152,6 +152,7 @@ export async function sweep(
   return { body: true, state: true };
 }
 
+export const HEALTH = "/_compactio/health";
 const MESSAGES = /^\/v1\/messages(\/count_tokens)?(\?|$)/;
 const HOP = new Set(["host", "connection", "content-length", "transfer-encoding", "accept-encoding", "keep-alive"]);
 
@@ -159,6 +160,7 @@ export function serve(port: number, env: Record<string, string | undefined> = pr
   const upstream = (env.COMPACTIO_UPSTREAM ?? "https://api.anthropic.com").replace(/\/$/, "");
   const state = store.loadSweep();
   const server = createServer(async (req, res) => {
+    if (req.url === HEALTH) return void res.end("ok");
     try {
       const chunks: Buffer[] = [];
       for await (const c of req) chunks.push(c as Buffer);

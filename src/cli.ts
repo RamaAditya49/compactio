@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // compactio CLI: `show <id>` prints a stored original output, `gain` prints the scoreboard,
-// `proxy [port]` runs the Sweep proxy.
+// `proxy [port]` runs the Sweep proxy, `sweep on|off|status` installs it as a service.
 import { fileURLToPath } from "node:url";
 import { JEV_PRICE_PER_TOKEN } from "./jev.ts";
 import * as store from "./store.ts";
+import * as install from "./install.ts";
 import { serve } from "./sweep.ts";
 
 const tok = (chars: number) => Math.round(chars / 4); // estimate: ~4 characters per token
@@ -60,7 +61,13 @@ if (process.argv[1] !== fileURLToPath(import.meta.url)) {
 } else if (cmd === "proxy") {
   const port = Number(arg ?? process.env.COMPACTIO_PORT ?? 8787);
   serve(port).on("listening", () => console.log(`compactio sweep proxy on http://127.0.0.1:${port}`));
+} else if (cmd === "sweep" && (arg === "on" || arg === "off" || arg === "status" || !arg)) {
+  const run = arg === "on" ? install.on() : arg === "off" ? install.off() : install.status();
+  Promise.resolve(run).then(console.log, (e) => {
+    console.error(`compactio: ${e.message ?? e}`);
+    process.exit(1);
+  });
 } else if (cmd) {
-  process.stderr.write("usage: compactio show <id> | compactio gain [session-id] | compactio proxy [port]\n");
+  process.stderr.write("usage: compactio show <id> | compactio gain [session-id] | compactio proxy [port] | compactio sweep on|off|status\n");
   process.exit(1);
 }

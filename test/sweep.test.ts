@@ -151,3 +151,23 @@ test("proxy forwards headers and streams the answer, with tombstones applied", a
   assert.match(got[0].body.messages[2].content[0].content, /removed/);
   assert.match(JSON.stringify(store.loadSweep().dropped), /removed/);
 });
+
+test("sweep on/off edits only its own settings keys, and the unit runs the copied CLI", async () => {
+  const { withEnv, withoutEnv, unit, ENV } = await import("../src/install.ts");
+  const before = { model: "opus", env: { TYPESAFE_API_KEY: "k" }, hooks: {} };
+  const on = withEnv(before, ENV(8787));
+  assert.equal(on.env.ANTHROPIC_BASE_URL, "http://127.0.0.1:8787");
+  assert.equal(on.env.TYPESAFE_API_KEY, "k");
+  assert.equal(on.model, "opus");
+  assert.deepEqual(withoutEnv(on, Object.keys(ENV(8787))), before);
+  assert.match(unit("/usr/bin/node", "/h/.compactio/bin/cli.js", 8787), /ExecStart=\/usr\/bin\/node \/h\/.compactio\/bin\/cli.js proxy 8787\nRestart=always/);
+});
+
+test("proxy answers its health check without the upstream", async () => {
+  const { HEALTH } = await import("../src/sweep.ts");
+  const proxy = serve(0, { COMPACTIO_UPSTREAM: "http://127.0.0.1:1" });
+  await new Promise((r) => proxy.once("listening", r));
+  const res = await fetch(`http://127.0.0.1:${(proxy.address() as any).port}${HEALTH}`);
+  proxy.close();
+  assert.equal(await res.text(), "ok");
+});
