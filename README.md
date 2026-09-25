@@ -48,6 +48,8 @@ compactio stops the waste where it starts: at the tool output, before it enters 
 - **Safe by default.** Low confidence, a timeout, or an API error returns the full output. compactio never blocks your agent.
 - **Nothing is lost.** Every cut output stays on your disk. The note in the output tells the agent how to get it back.
 - **Code is never cut.** A `Read` of a source file always passes in full. compactio only skips an exact re-read of an unchanged file.
+- **Data files are cut.** A `Read` of a log, a CSV, a JSONL dump, a lockfile, or a minified bundle takes the same path as `Bash` output.
+- **Old output can go too (opt-in).** The Sweep proxy removes old tool results that the current goal no longer needs. See [Sweep](#sweep-opt-in).
 - **Secrets stay local.** API keys, tokens, private keys, and `KEY=value` pairs are masked before any request.
 - **Two providers.** Use a TypeSafe key or an OpenRouter key.
 - **Works without a key.** Local mode uses lossless filters, the re-read skip, and a head-and-tail cut for very large output.
@@ -132,6 +134,49 @@ compactio uses the Claude Code `PostToolUse` hook. The hook runs after a tool fi
 | `headtail` | The first 40 and the last 30 lines | A long build or install log |
 | `stub` | One line | Output that is not related to the goal |
 
+### Sweep (opt-in)
+
+The hook can only cut **new** output. Old tool results stay in the history, and the agent sends them again on every turn. The Sweep removes them.
+
+The Sweep is a local proxy between Claude Code and the Anthropic API. On each request it does three steps:
+
+| Step | Who | What |
+|---|---|---|
+| 1 | Code | Put back every earlier tombstone, so that the prompt prefix does not change between turns. |
+| 2 | Jev | When old results hold 40,000 characters or more, rate up to 16 of them in one request: `keep` or `drop`. |
+| 3 | Code | Replace the `drop` results with a tombstone, but only when the saving pays for the prompt-cache rewrite. |
+
+A tombstone looks like this:
+
+```text
+[compactio: the output of Bash npm test was removed because the current goal no longer needs it. Full output: node ".../cli.js" show 1a2b3c4d. Or run the tool again.]
+```
+
+Rules:
+
+- The last 10 messages are never swept. They are the work in progress.
+- Results below 4,000 characters and results with images are never swept.
+- Jev must answer `drop` with a confidence of 0.8 or more. Otherwise the result stays.
+- **Cache gate.** A change in the middle of the history makes the next request write the cache again after that point. The Sweep drops only when `dropped × 0.1 × turns ≥ rest-of-history × 1.15`. `turns` is `COMPACTIO_SWEEP_TURNS` (default 30).
+
+**Start the proxy** in its own terminal, and keep it running:
+
+```bash
+npx compactio proxy 8787
+```
+
+**Point Claude Code at it** in `~/.claude/settings.json`:
+
+```jsonc
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:8787"
+  }
+}
+```
+
+To stop the Sweep, remove `ANTHROPIC_BASE_URL` first, then stop the proxy.
+
 ### What leaves your machine
 
 Only a bounded and redacted summary goes to the provider:
@@ -153,7 +198,11 @@ Set these variables in the `env` block of `~/.claude/settings.json`.
 | `COMPACTIO_JEV_MODEL` | `jev-1.13.0` (TypeSafe), `~typesafe/jev-latest` (OpenRouter) | Jev model. |
 | `COMPACTIO_JEV_URL` | the provider endpoint | Custom endpoint, for example a proxy. |
 | `COMPACTIO_TIMEOUT_MS` | `1500` | Time limit for one decision. After it, the full output passes. |
-| `COMPACTIO_HOME` | `~/.compactio` | Folder for stored outputs, read hashes, and the decision log. |
+| `COMPACTIO_HOME` | `~/.compactio` | Folder for stored outputs, read hashes, Sweep decisions, and the decision log. |
+| `COMPACTIO_UPSTREAM` | `https://api.anthropic.com` | Sweep proxy: the API that receives the requests. |
+| `COMPACTIO_PORT` | `8787` | Sweep proxy: the local port, when `proxy` gets no port. |
+| `COMPACTIO_SWEEP_TIMEOUT_MS` | `3000` | Sweep proxy: time limit for one Jev request. After it, the history passes unchanged. |
+| `COMPACTIO_SWEEP_TURNS` | `30` | Sweep proxy: expected turns left in a session. A higher value drops more often. |
 
 ## Commands
 
@@ -162,6 +211,7 @@ Set these variables in the `env` block of `~/.claude/settings.json`.
 | `/compactio:gain` | Show the savings scoreboard in Claude Code. |
 | `npx compactio gain` | Show the scoreboard in a terminal. |
 | `npx compactio show <id>` | Print a stored original output. The agent runs this itself when it needs the full output. |
+| `npx compactio proxy [port]` | Run the Sweep proxy on `127.0.0.1`. |
 | `claude plugin disable compactio@compactio` | Turn compactio off. |
 
 ## FAQ
@@ -209,19 +259,52 @@ Claude Code today. Codex CLI, OpenCode, Gemini CLI, Cursor, and Trae are next. S
 - Claude Code already limits Bash output to 30,000 characters. On one Bash call, compactio saves at most about 7,500 tokens. The agent then carries that saving through every later turn.
 - We make no claim about the total bill until the public benchmark (task success, tokens, and cost) exists.
 
+## Limitations
+
+Read these before you use compactio. They are the limits of the design, not bugs.
+
+**Where compactio has no effect**
+
+- **Your messages, the agent's replies, the system prompt, and MCP tool schemas.** compactio only touches tool output.
+- **Source code from `Read`.** It always passes in full, because the agent may edit it. In a session that mostly reads code, the saving is small.
+- **Images, PDFs, and notebooks from `Read`.** They pass untouched and do not count in the scoreboard.
+- **Old context, without the Sweep.** The hook only cuts new output. The history that is already in the context stays until you run the Sweep, `/compact`, or `/clear`.
+- **Other hosts.** v0.1 works in Claude Code only.
+
+**Limits of the decision**
+
+- **Jev sees a preview, not the full output.** The preview is the head, the error lines, and the tail, about 6,000 characters (2,400 for each Sweep result). Jev can misjudge an output whose important part is in the middle.
+- **Jev request limits.** State and questions must fit in 64,000 tokens, and state plus the longest question in 32,000 tokens. For this reason, one Sweep request rates 16 results at most. The others wait for a later request.
+- **The goal is the last prompt.** A short prompt such as "continue" gives Jev little to work with.
+- **The data-file list is fixed.** compactio knows a data file by its name: `.log`, `.out`, `.csv`, `.tsv`, `.jsonl`, `.ndjson`, `.map`, `.min.js`, `.min.css`, and common lockfiles. If the agent must edit such a file, it gets a cut view. It must run `compactio show <id>` to see all of it.
+- **Latency.** A large output waits up to 1.5 s for Jev. A Sweep request waits up to 3 s. The time limit then lets the output pass unchanged.
+
+**Limits of the Sweep proxy**
+
+- **Claude Code cannot reach the API when the proxy is down.** The proxy fails open for its own errors, but not for a stopped process. Remove `ANTHROPIC_BASE_URL` before you stop it.
+- **Each sweep costs one cache rewrite.** The cache gate estimates the cost with a fixed number of turns left (`COMPACTIO_SWEEP_TURNS`). If the session ends sooner, the sweep costs more than it saves.
+- **A tombstone is permanent.** A dropped result stays dropped for the whole session. The agent must run the tool again or run `compactio show <id>`.
+- **The proxy sees all API traffic,** including the auth header. It forwards the header and does not store it. It stores the dropped outputs on disk under `COMPACTIO_HOME`.
+- **Tested with a fake API and a fake Jev.** One real Claude Code request went through the proxy with a subscription login and got the API's own answer back. A full real session through the proxy is not tested yet.
+
+**Limits of the numbers**
+
+- Token counts are estimates: characters ÷ 4.
+- The state files (`store/`, `sessions/`, `sweep.json`) are never pruned.
+
 ## How compactio compares
 
 | | compactio | [rtk](https://github.com/rtk-ai/rtk) | [fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction) |
 |---|---|---|---|
 | When it acts | After each tool call | Before each shell command | At compaction |
 | How it decides | Jev, from the current goal and a content preview | Fixed rules per command | Jev, from a size note |
-| Tools covered | Bash, Grep, Web, MCP, re-reads | Shell commands | All, at compaction |
+| Tools covered | Bash, Grep, Web, MCP, data-file reads, re-reads, old results (Sweep) | Shell commands | All, at compaction |
 
 ## Roadmap
 
 - [x] **v0.1** Claude Code: tool output filter, re-read skip, scoreboard, redaction, local mode, TypeSafe and OpenRouter
 - [ ] **v0.2** Codex CLI, OpenCode, Gemini CLI, Cursor, Trae. Replay evaluation on real sessions.
-- [ ] **v0.3** Sweep: remove stale context in long sessions (opt-in local proxy), with prompt-cache protection
+- [x] **v0.3** Sweep: remove stale context in long sessions (opt-in local proxy), with prompt-cache protection. Data-file reads.
 - [ ] **v0.4** Gate: route each prompt to the cheapest model that can do the task
 - [ ] **v1.0** Public benchmark
 
