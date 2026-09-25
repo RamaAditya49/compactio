@@ -153,6 +153,7 @@ export async function sweep(
 }
 
 export const HEALTH = "/_compactio/health";
+export const QUIT = "/_compactio/quit";
 const MESSAGES = /^\/v1\/messages(\/count_tokens)?(\?|$)/;
 const HOP = new Set(["host", "connection", "content-length", "transfer-encoding", "accept-encoding", "keep-alive"]);
 
@@ -161,6 +162,10 @@ export function serve(port: number, env: Record<string, string | undefined> = pr
   const state = store.loadSweep();
   const server = createServer(async (req, res) => {
     if (req.url === HEALTH) return void res.end("ok");
+    // The custom header makes a browser send a CORS preflight first, which fails: web pages cannot stop the proxy.
+    if (req.url === QUIT && req.method === "POST" && req.headers["x-compactio"] === "quit") {
+      return void res.end("bye", () => process.exit(0));
+    }
     try {
       const chunks: Buffer[] = [];
       for await (const c of req) chunks.push(c as Buffer);

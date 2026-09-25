@@ -3,16 +3,45 @@
     "PostToolUse": [
       {
         "matcher": "Bash|Read|Grep|WebFetch|WebSearch|mcp__.*",
-        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" post-tool", "timeout": 5 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" post-tool",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" prompt", "timeout": 5 }] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" prompt",
+            "timeout": 5
+          }
+        ]
+      }
     ],
     "SessionStart": [
       {
         "matcher": "compact|clear",
-        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" reset", "timeout": 5 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" reset",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/src/hook.ts\" start",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
