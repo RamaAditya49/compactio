@@ -1,6 +1,6 @@
 {
   "name": "compactio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "System 1 for your coding agent. Cuts tool output the task does not need, before it enters the context. Powered by Jev.",
   "author": { "name": "Rama Aditya", "url": "https://github.com/RamaAditya49" },
   "homepage": "https://github.com/RamaAditya49/compactio",
