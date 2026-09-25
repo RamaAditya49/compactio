@@ -167,7 +167,7 @@ Fallback path for all hosts: **command rewrite** (`compactio run -- <cmd>`), the
 | Decision | Choice | Reason |
 |---|---|---|
 | Language | TypeScript, run directly by Node ≥ 22.18 (type stripping). Zero dependencies. No build step. | The hook starts fast and installs with nothing. Before the npm release, compile to JS, because Node does not strip types inside `node_modules`. |
-| Engine | Jev `jev-1.13.0` (pinned), through the TypeSafe API. OpenRouter later. | $0.042 per 1M input tokens. Output is free. |
+| Engine | Jev `jev-1.13.0` (pinned) through the TypeSafe API, or `~typesafe/jev-latest` through the OpenRouter Decisions endpoint (app name: compactio). | $0.042 per 1M input tokens. Output is free. |
 | Request limits | State + questions ≤ 64k tokens. State + longest question ≤ 32k. | Official Jev limits. The preview is capped at ~6k characters. |
 | Failure | **Fail open**: the original output passes, the event is logged, and the scoreboard shows it. | compactio must never break the agent. |
 | Timeout | 1.5 s per decision, then fail open. | Far below the Claude Code hook timeout. |

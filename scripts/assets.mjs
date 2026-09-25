@@ -108,7 +108,7 @@ ${blocks}
 
 // ---------- terminal demo ----------
 function demo() {
-  const W = 960, H = 540, T = 16, X = 32, LH = 24;
+  const W = 960, H = 440, T = 16, X = 32, LH = 24;
   const items = []; // [tIn, tOut, svg]
   const line = (y, tIn, tOut, content, fill = C.text) =>
     items.push([tIn, tOut, `<text x="${X}" y="${y}" class="mono" font-size="15" fill="${fill}" xml:space="preserve">${content}</text>`]);
@@ -161,14 +161,14 @@ function demo() {
 function how() {
   const W = 1280, H = 380, T = 8;
   const steps = [
-    ["Tool runs", "Bash · Grep · Web · MCP", C.dim, "any output"],
+    ["Tool", "output arrives", C.dim, "Bash · Grep · Web · MCP"],
     ["Code", "skip small output", C.dim, "and unchanged re-reads"],
     ["Code", "lossless clean", C.dim, "ANSI · repeats · blanks"],
     ["Jev", "chooses the view", C.s1, "~0.5 s · no generation"],
     ["Code", "apply + store", C.dim, "original stays on disk"],
     ["LLM", "reads only this", C.s2, "System 2"],
   ];
-  const bw = 176, gap = 24, x0 = (W - (steps.length * bw + (steps.length - 1) * gap)) / 2, y0 = 84, bh = 118;
+  const bw = 188, gap = 16, x0 = (W - (steps.length * bw + (steps.length - 1) * gap)) / 2, y0 = 84, bh = 118;
   let body = `
 <rect width="${W}" height="${H}" rx="18" fill="${C.bg}"/>
 <rect x=".5" y=".5" width="${W - 1}" height="${H - 1}" rx="18" fill="none" stroke="${C.line}"/>
@@ -180,7 +180,7 @@ function how() {
     body += `<rect x="${x}" y="${y0}" width="${bw}" height="${bh}" rx="12" fill="${C.panel}" stroke="${hi ? color : C.line}" stroke-opacity="${hi ? 0.8 : 1}"/>
 <text x="${x + 18}" y="${y0 + 32}" font-size="13" fill="${hi ? color : C.dim}" class="mono">${String(i + 1).padStart(2, "0")} · ${esc(k)}</text>
 <text x="${x + 18}" y="${y0 + 66}" font-size="17" font-weight="600" fill="${C.text}">${esc(a)}</text>
-<text x="${x + 18}" y="${y0 + 92}" font-size="13" fill="${C.dim}">${esc(b)}</text>
+<text x="${x + 18}" y="${y0 + 92}" font-size="12.5" fill="${C.dim}">${esc(b)}</text>
 `;
     if (i < steps.length - 1) body += `<path d="M${x + bw + 4} ${y0 + bh / 2}h${gap - 8}" stroke="${C.faint}" stroke-width="2" marker-end="url(#arr)"/>`;
   });
