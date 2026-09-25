@@ -13,7 +13,8 @@
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
   <a href="#how-it-works">How it works</a> ·
-  <a href="#configuration">Configuration</a> ·
+  <a href="#troubleshooting">Troubleshooting</a> ·
+  <a href="#limitations">Limitations</a> ·
   <a href="#faq">FAQ</a> ·
   <a href="BLUEPRINT.md">Blueprint</a>
 </p>
@@ -57,32 +58,54 @@ compactio stops the waste where it starts: at the tool output, before it enters 
 
 ## Quick start
 
-**1. Install the plugin in Claude Code**
+compactio has two parts:
+
+| Part | What it does | Where it runs | Setup |
+|---|---|---|---|
+| **Filter** | Cuts large **new** tool output before the agent reads it | Every Claude Code session: terminal and desktop app | Install the plugin |
+| **Sweep** (optional) | Removes **old** tool output that the goal no longer needs | `claude` in a terminal only | One more command |
+
+Node 22.18 or later must be on your `PATH`. Check with `node -v`.
+
+### 1. Install the plugin
+
+Run this in a terminal:
 
 ```bash
 claude plugin marketplace add RamaAditya49/compactio
 claude plugin install compactio@compactio
 ```
 
-Node 22.18 or later must be on your `PATH`.
+Restart Claude Code. The filter now works in local mode, with no key.
 
-**2. Add one API key.** Get a key from [TypeSafe](https://console.typesafe.ai/keys) (the maker of Jev) or [OpenRouter](https://openrouter.ai/keys). Then run this in a terminal and paste the key. The key does not show on the screen.
+### 2. Add a Jev key (recommended)
 
-```bash
-npx compactio key
-```
+With a key, Jev decides how much of each output to keep. Without a key, compactio cuts only very large output, with a fixed rule.
 
-Without a key, compactio runs in local mode. You can also put `TYPESAFE_API_KEY` or `OPENROUTER_API_KEY` in the `env` block of `~/.claude/settings.json` yourself.
+1. Get a key from [TypeSafe](https://console.typesafe.ai/keys), the maker of Jev, or from [OpenRouter](https://openrouter.ai/keys).
+2. Run this in a terminal, and paste the key when it asks. The key does not show on the screen.
 
-**3. Run setup in Claude Code**
+   ```bash
+   npx compactio key
+   ```
+
+3. Restart Claude Code.
+
+Do not paste the key into the Claude Code chat. Text in the chat goes into the conversation.
+
+### 3. Turn on the Sweep (optional)
+
+Use the Sweep if you run long sessions with `claude` in a terminal. The Claude desktop app does not use it (see [Limitations](#limitations)).
+
+In Claude Code, run:
 
 ```text
 /compactio:setup
 ```
 
-Setup checks the key and turns on the [Sweep](#sweep-opt-in). Then restart Claude Code. compactio now works on every session.
+Setup checks the key and turns on the Sweep. Then restart your `claude` sessions. Details: [Sweep](#sweep-opt-in).
 
-**4. See the savings**
+### 4. Check that it works
 
 ```text
 /compactio:gain
@@ -95,6 +118,7 @@ compactio · all sessions
   Share of tool output cut     ████░░░░░░░░░░░░░░░░ 20%
   Outputs cut                  3 of 17  (avg cut 93%)
   Jev decisions                4  ·  $0.0002
+  Old outputs swept            0
   Unchanged re-reads skipped   0
   Fail-open                    0
 ────────────────────────────────────────────────────
@@ -106,7 +130,18 @@ compactio · all sessions
   tokens ≈ characters ÷ 4
 ```
 
-You can also run the scoreboard outside Claude Code: `npx compactio gain`.
+The numbers grow as you work. A short session with small outputs shows 0, and that is correct: small output passes untouched.
+
+For the Sweep, run `/compactio:sweep status`. It must say `proxy running` and `settings point at it`.
+
+### Turn it off
+
+| To turn off | Run |
+|---|---|
+| The Sweep | `/compactio:sweep off`, or `npx compactio sweep off` in a terminal. Then restart your `claude` sessions. |
+| All of compactio | `npx compactio sweep off`, then `claude plugin disable compactio@compactio` |
+
+Turn off the Sweep **before** you remove the plugin. Otherwise Claude Code still points at a proxy that is gone.
 
 ## How it works
 
@@ -157,9 +192,11 @@ Rules:
 - Jev must answer `drop` with a confidence of 0.8 or more. Otherwise the result stays.
 - **Cache gate.** A change in the middle of the history makes the next request write the cache again after that point. The Sweep drops only when `dropped × 0.1 × turns ≥ rest-of-history × 1.15`. `turns` is `COMPACTIO_SWEEP_TURNS` (default 30).
 
-`/compactio:setup` turns it on when a Jev key is present. You can also turn it on and off yourself: `/compactio:sweep on`, `/compactio:sweep off`, or `npx compactio sweep on` in a terminal. Then restart your Claude Code sessions.
+`/compactio:setup` turns it on when a Jev key is present. You can also use `/compactio:sweep on|off|status`, or `npx compactio sweep on|off|status` in a terminal.
 
-`sweep on` does four steps:
+<details>
+<summary><b>What <code>sweep on</code> changes on your computer</b></summary>
+
 
 1. Copy compactio to `~/.compactio/bin`, so that a plugin update does not break the proxy.
 2. Start the proxy. On Linux, it is the systemd user service `compactio-proxy`, with `Restart=always`: it starts again after a crash and after a reboot. On macOS and Windows, it is a background process.
@@ -167,6 +204,8 @@ Rules:
 4. Add two keys to the `env` block of `~/.claude/settings.json` (backup: `settings.json.compactio-bak`):
    - `ANTHROPIC_BASE_URL=http://127.0.0.1:8787`
    - `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-5-5[1m]`. Behind a custom base URL, Claude Code does not detect the 1M window, and autocompact runs in a loop. The `[1m]` suffix fixes it.
+
+</details>
 
 **Session guard.** At the start of each Claude Code session, compactio checks the proxy. If the proxy is down, compactio starts it before the first request. If it still does not start, Claude Code shows a message with the command that turns the Sweep off.
 
@@ -211,6 +250,17 @@ Set these variables in the `env` block of `~/.claude/settings.json`.
 | `npx compactio sweep on\|off\|status` or `/compactio:sweep on\|off\|status` | Install, remove, or check the Sweep proxy service. |
 | `npx compactio proxy [port]` | Run the Sweep proxy in the foreground on `127.0.0.1`. |
 | `claude plugin disable compactio@compactio` | Turn compactio off. |
+
+## Troubleshooting
+
+| Problem | Cause | Fix |
+|---|---|---|
+| Claude Code cannot connect to the API (`ECONNREFUSED`) | Claude Code points at the Sweep proxy, and the proxy is down | Run `npx compactio sweep off` in a terminal, then restart Claude Code |
+| "Autocompact is thrashing" | Claude Code does not know the model's 1M window behind the proxy | Pick the `opus` model, or add `[1m]` to the model name. See [Limitations](#limitations). |
+| `/compactio:sweep status` says the desktop app sets its own API address | The desktop app does not use the Sweep | Use `claude` in a terminal for long sessions. The filter still works in the desktop app. |
+| `/compactio:gain` shows 0 | No large output yet | Work as usual. Only output above 2,000 characters counts. |
+| `npx compactio ...` prints nothing | Version 0.2.0 or earlier | Run `npx compactio@latest ...` |
+| Jev decisions stay at 0 | No key, or Claude Code did not restart after `compactio key` | Run `/compactio:setup` to check the key, then restart Claude Code |
 
 ## FAQ
 
@@ -267,7 +317,7 @@ Read these before you use compactio. They are the limits of the design, not bugs
 - **Source code from `Read`.** It always passes in full, because the agent may edit it. In a session that mostly reads code, the saving is small.
 - **Images, PDFs, and notebooks from `Read`.** They pass untouched and do not count in the scoreboard.
 - **Old context, without the Sweep.** The hook only cuts new output. The history that is already in the context stays until you run the Sweep, `/compact`, or `/clear`.
-- **Other hosts.** v0.1 works in Claude Code only.
+- **Other hosts.** compactio works in Claude Code only.
 
 **Limits of the decision**
 
@@ -287,7 +337,7 @@ Read these before you use compactio. They are the limits of the design, not bugs
 - **A tombstone is permanent.** A dropped result stays dropped for the whole session. The agent must run the tool again or run `compactio show <id>`.
 - **The proxy sees all API traffic,** including the auth header. It forwards the header and does not store it. It stores the dropped outputs on disk under `COMPACTIO_HOME`.
 - **The context window is set by name.** Behind a custom `ANTHROPIC_BASE_URL`, Claude Code does not detect the 1M window. `sweep on` maps the `opus` alias to `claude-opus-5-5[1m]`. If you pick a model by its full id, or pick Sonnet or Haiku, add `[1m]` yourself where the model supports it. When a new Opus ships, update `ANTHROPIC_DEFAULT_OPUS_MODEL`. `CLAUDE_CODE_MAX_CONTEXT_TOKENS` and `CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT` did not stop the loop in Claude Code 2.1.282.
-- **Test coverage.** Unit tests use a fake API and a fake Jev. One real Claude Code session (Opus 5.5, subscription login) ran through the proxy with 3 reads and 8 shell calls. Jev rated the old reads in 0.7 s. Longer real sessions are not tested yet.
+- **Test coverage.** Unit tests use a fake API and a fake Jev. Real Claude Code sessions (Opus 5.5, subscription login) ran through the proxy: Jev rated old reads in 0.7 s, and the session guard started a stopped proxy. A real session where Jev drops a result is not tested yet.
 
 **Limits of the numbers**
 
@@ -305,8 +355,8 @@ Read these before you use compactio. They are the limits of the design, not bugs
 ## Roadmap
 
 - [x] **v0.1** Claude Code: tool output filter, re-read skip, scoreboard, redaction, local mode, TypeSafe and OpenRouter
-- [ ] **v0.2** Codex CLI, OpenCode, Gemini CLI, Cursor, Trae. Replay evaluation on real sessions.
-- [x] **v0.3** Sweep: remove stale context in long sessions (opt-in local proxy), with prompt-cache protection. Data-file reads.
+- [x] **v0.2** Sweep: remove stale context in long sessions (opt-in local proxy), with prompt-cache protection. Data-file reads. One-step setup and session guard.
+- [ ] **v0.3** Codex CLI, OpenCode, Gemini CLI, Cursor, Trae. Replay evaluation on real sessions.
 - [ ] **v0.4** Gate: route each prompt to the cheapest model that can do the task
 - [ ] **v1.0** Public benchmark
 
