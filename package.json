@@ -3,11 +3,45 @@
   "version": "0.1.0",
   "description": "System 1 for your coding agent. Cuts tool output the task does not need, before it enters the context. Powered by Jev.",
   "type": "module",
-  "engines": { "node": ">=22.18" },
-  "scripts": { "test": "node --test test/*.test.ts" },
-  "keywords": ["claude-code", "codex", "agent", "tokens", "context", "compaction", "jev", "typesafe", "system-1"],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "agent",
+    "tokens",
+    "context",
+    "compaction",
+    "jev",
+    "typesafe",
+    "system-1"
+  ],
   "author": "Rama Aditya",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/RamaAditya49/compactio.git" },
-  "files": ["src", "hooks", "commands", ".claude-plugin", "README.md", "BLUEPRINT.md", "LICENSE"]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RamaAditya49/compactio.git"
+  },
+  "files": [
+    "dist",
+    "src",
+    "hooks",
+    "commands",
+    ".claude-plugin",
+    "README.md",
+    "BLUEPRINT.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "compactio": "dist/cli.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }
