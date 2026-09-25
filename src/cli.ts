@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // compactio CLI: `show <id>` prints a stored original output, `gain` prints the scoreboard,
 // `proxy [port]` runs the Sweep proxy, `sweep on|off|status` installs it as a service.
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { JEV_PRICE_PER_TOKEN } from "./jev.ts";
 import * as store from "./store.ts";
@@ -47,7 +48,8 @@ export function gain(entries: store.LogEntry[], sid?: string): string {
 }
 
 const [cmd, arg] = process.argv.slice(2);
-if (process.argv[1] !== fileURLToPath(import.meta.url)) {
+// npx runs the CLI through a symlink in node_modules/.bin: compare real paths.
+if (!process.argv[1] || realpathSync(process.argv[1]) !== fileURLToPath(import.meta.url)) {
   // imported (tests): do nothing
 } else if (cmd === "show") {
   const text = arg && store.loadOriginal(arg);

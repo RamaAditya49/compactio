@@ -37,3 +37,14 @@ test("gain sums the cuts and lists the biggest one first", async () => {
   assert.match(out, /Outputs cut                  2 of 3/);
   assert.match(out, /Biggest cuts\n    Bash   errors     20\.0k → 1\.0k/);
 });
+
+test("the CLI runs through a symlink, as npx starts it", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtempSync, symlinkSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const link = join(mkdtempSync(join(tmpdir(), "compactio-bin-")), "compactio");
+  symlinkSync(new URL("../src/cli.ts", import.meta.url).pathname, link);
+  const out = execFileSync(process.execPath, [link, "gain"], { env: { ...process.env, COMPACTIO_HOME: mkdtempSync(join(tmpdir(), "compactio-")) } }).toString();
+  assert.match(out, /compactio · all sessions/);
+});
