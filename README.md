@@ -159,26 +159,26 @@ Rules:
 - Jev must answer `drop` with a confidence of 0.8 or more. Otherwise the result stays.
 - **Cache gate.** A change in the middle of the history makes the next request write the cache again after that point. The Sweep drops only when `dropped × 0.1 × turns ≥ rest-of-history × 1.15`. `turns` is `COMPACTIO_SWEEP_TURNS` (default 30).
 
-**Start the proxy** in its own terminal, and keep it running:
+**Turn it on** with one command (Linux, systemd):
 
 ```bash
-npx compactio proxy 8787
+npx compactio sweep on
 ```
 
-**Point Claude Code at it** in `~/.claude/settings.json`:
+Or, inside Claude Code: `/compactio:sweep on`. Then restart your Claude Code sessions.
 
-```jsonc
-{
-  "model": "claude-opus-5-5[1m]",
-  "env": {
-    "ANTHROPIC_BASE_URL": "http://127.0.0.1:8787"
-  }
-}
-```
+The command does four steps:
 
-Keep the `[1m]` suffix on the model name. With a custom `ANTHROPIC_BASE_URL`, Claude Code 2.1.282 did not use the 1M context window. It compacted again and again ("Autocompact is thrashing"), also through a plain proxy without compactio. The suffix fixed it.
+1. Copy compactio to `~/.compactio/bin`, so that a plugin update does not break the proxy.
+2. Start the proxy as the systemd user service `compactio-proxy`, with `Restart=always`. It starts again after a crash and after a reboot.
+3. Wait until the proxy answers.
+4. Add two keys to the `env` block of `~/.claude/settings.json` (backup: `settings.json.compactio-bak`):
+   - `ANTHROPIC_BASE_URL=http://127.0.0.1:8787`
+   - `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-5-5[1m]`. Behind a custom base URL, Claude Code does not detect the 1M window, and autocompact runs in a loop. The `[1m]` suffix fixes it.
 
-To stop the Sweep, remove `ANTHROPIC_BASE_URL` first, then stop the proxy.
+`compactio sweep status` shows the state. `compactio sweep off` removes the keys first, then stops the service.
+
+**Without systemd** (macOS, Windows): run `npx compactio proxy 8787` in a terminal, and set the same two keys yourself.
 
 ### What leaves your machine
 
@@ -214,7 +214,8 @@ Set these variables in the `env` block of `~/.claude/settings.json`.
 | `/compactio:gain` | Show the savings scoreboard in Claude Code. |
 | `npx compactio gain` | Show the scoreboard in a terminal. |
 | `npx compactio show <id>` | Print a stored original output. The agent runs this itself when it needs the full output. |
-| `npx compactio proxy [port]` | Run the Sweep proxy on `127.0.0.1`. |
+| `npx compactio sweep on\|off\|status` or `/compactio:sweep on\|off\|status` | Install, remove, or check the Sweep proxy service. |
+| `npx compactio proxy [port]` | Run the Sweep proxy in the foreground on `127.0.0.1`. |
 | `claude plugin disable compactio@compactio` | Turn compactio off. |
 
 ## FAQ
@@ -284,11 +285,12 @@ Read these before you use compactio. They are the limits of the design, not bugs
 
 **Limits of the Sweep proxy**
 
-- **Claude Code cannot reach the API when the proxy is down.** The proxy fails open for its own errors, but not for a stopped process. Remove `ANTHROPIC_BASE_URL` before you stop it.
+- **Claude Code cannot reach the API when the proxy is down.** The proxy fails open for its own errors, but not for a stopped process. The systemd service starts it again after a crash. Use `compactio sweep off`, not `systemctl stop`, to turn it off.
+- **`sweep on` needs Linux with systemd.** On other systems, run the proxy yourself.
 - **Each sweep costs one cache rewrite.** The cache gate estimates the cost with a fixed number of turns left (`COMPACTIO_SWEEP_TURNS`). If the session ends sooner, the sweep costs more than it saves.
 - **A tombstone is permanent.** A dropped result stays dropped for the whole session. The agent must run the tool again or run `compactio show <id>`.
 - **The proxy sees all API traffic,** including the auth header. It forwards the header and does not store it. It stores the dropped outputs on disk under `COMPACTIO_HOME`.
-- **Set the context window yourself.** Behind a custom `ANTHROPIC_BASE_URL`, Claude Code does not detect the 1M window. Use a model name with `[1m]`, or autocompact runs in a loop.
+- **The context window is set by name.** Behind a custom `ANTHROPIC_BASE_URL`, Claude Code does not detect the 1M window. `sweep on` maps the `opus` alias to `claude-opus-5-5[1m]`. If you pick a model by its full id, or pick Sonnet or Haiku, add `[1m]` yourself where the model supports it. When a new Opus ships, update `ANTHROPIC_DEFAULT_OPUS_MODEL`. `CLAUDE_CODE_MAX_CONTEXT_TOKENS` and `CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT` did not stop the loop in Claude Code 2.1.282.
 - **Test coverage.** Unit tests use a fake API and a fake Jev. One real Claude Code session (Opus 5.5, subscription login) ran through the proxy with 3 reads and 8 shell calls. Jev rated the old reads in 0.7 s. Longer real sessions are not tested yet.
 
 **Limits of the numbers**
