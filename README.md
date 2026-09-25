@@ -66,23 +66,21 @@ claude plugin install compactio@compactio
 
 Node 22.18 or later must be on your `PATH`.
 
-**2. Add one API key** in `~/.claude/settings.json`. Pick one provider:
+**2. Add one API key.** Get a key from [TypeSafe](https://console.typesafe.ai/keys) (the maker of Jev) or [OpenRouter](https://openrouter.ai/keys). Then run this in a terminal and paste the key. The key does not show on the screen.
 
-```jsonc
-{
-  "env": {
-    // Option A: TypeSafe, the maker of Jev (https://console.typesafe.ai/keys)
-    "TYPESAFE_API_KEY": "your-typesafe-key"
-
-    // Option B: OpenRouter (https://openrouter.ai/keys)
-    // "OPENROUTER_API_KEY": "sk-or-..."
-  }
-}
+```bash
+npx compactio key
 ```
 
-Without a key, compactio runs in local mode.
+Without a key, compactio runs in local mode. You can also put `TYPESAFE_API_KEY` or `OPENROUTER_API_KEY` in the `env` block of `~/.claude/settings.json` yourself.
 
-**3. Restart Claude Code.** compactio now works on every session.
+**3. Run setup in Claude Code**
+
+```text
+/compactio:setup
+```
+
+Setup checks the key and turns on the [Sweep](#sweep-opt-in). Then restart Claude Code. compactio now works on every session.
 
 **4. See the savings**
 
@@ -159,26 +157,20 @@ Rules:
 - Jev must answer `drop` with a confidence of 0.8 or more. Otherwise the result stays.
 - **Cache gate.** A change in the middle of the history makes the next request write the cache again after that point. The Sweep drops only when `dropped × 0.1 × turns ≥ rest-of-history × 1.15`. `turns` is `COMPACTIO_SWEEP_TURNS` (default 30).
 
-**Turn it on** with one command (Linux, systemd):
+`/compactio:setup` turns it on when a Jev key is present. You can also turn it on and off yourself: `/compactio:sweep on`, `/compactio:sweep off`, or `npx compactio sweep on` in a terminal. Then restart your Claude Code sessions.
 
-```bash
-npx compactio sweep on
-```
-
-Or, inside Claude Code: `/compactio:sweep on`. Then restart your Claude Code sessions.
-
-The command does four steps:
+`sweep on` does four steps:
 
 1. Copy compactio to `~/.compactio/bin`, so that a plugin update does not break the proxy.
-2. Start the proxy as the systemd user service `compactio-proxy`, with `Restart=always`. It starts again after a crash and after a reboot.
+2. Start the proxy. On Linux, it is the systemd user service `compactio-proxy`, with `Restart=always`: it starts again after a crash and after a reboot. On macOS and Windows, it is a background process.
 3. Wait until the proxy answers.
 4. Add two keys to the `env` block of `~/.claude/settings.json` (backup: `settings.json.compactio-bak`):
    - `ANTHROPIC_BASE_URL=http://127.0.0.1:8787`
    - `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-5-5[1m]`. Behind a custom base URL, Claude Code does not detect the 1M window, and autocompact runs in a loop. The `[1m]` suffix fixes it.
 
-`compactio sweep status` shows the state. `compactio sweep off` removes the keys first, then stops the service.
+**Session guard.** At the start of each Claude Code session, compactio checks the proxy. If the proxy is down, compactio starts it before the first request. If it still does not start, Claude Code shows a message with the command that turns the Sweep off.
 
-**Without systemd** (macOS, Windows): run `npx compactio proxy 8787` in a terminal, and set the same two keys yourself.
+`compactio sweep status` shows the state. `compactio sweep off` removes the keys first, then stops the proxy.
 
 ### What leaves your machine
 
@@ -211,6 +203,8 @@ Set these variables in the `env` block of `~/.claude/settings.json`.
 
 | Command | Description |
 |---|---|
+| `/compactio:setup` | Check the Jev key and turn on the Sweep. |
+| `npx compactio key` | Save a Jev key in the Claude Code settings. The key does not show on the screen. |
 | `/compactio:gain` | Show the savings scoreboard in Claude Code. |
 | `npx compactio gain` | Show the scoreboard in a terminal. |
 | `npx compactio show <id>` | Print a stored original output. The agent runs this itself when it needs the full output. |
@@ -285,8 +279,9 @@ Read these before you use compactio. They are the limits of the design, not bugs
 
 **Limits of the Sweep proxy**
 
-- **Claude Code cannot reach the API when the proxy is down.** The proxy fails open for its own errors, but not for a stopped process. The systemd service starts it again after a crash. Use `compactio sweep off`, not `systemctl stop`, to turn it off.
-- **`sweep on` needs Linux with systemd.** On other systems, run the proxy yourself.
+- **Claude Code cannot reach the API when the proxy is down.** The proxy fails open for its own errors, but not for a stopped process. The session guard starts it at the start of a session, and systemd starts it after a crash on Linux. A proxy that stops in the middle of a session on macOS or Windows stays down until the next session. Use `compactio sweep off`, not `systemctl stop`, to turn it off.
+- **macOS and Windows are not tested.** The background-process path is tested on Linux only.
+- **The key step needs a terminal.** A key typed into the Claude Code chat goes into the conversation, so `/compactio:setup` does not take a key.
 - **Each sweep costs one cache rewrite.** The cache gate estimates the cost with a fixed number of turns left (`COMPACTIO_SWEEP_TURNS`). If the session ends sooner, the sweep costs more than it saves.
 - **A tombstone is permanent.** A dropped result stays dropped for the whole session. The agent must run the tool again or run `compactio show <id>`.
 - **The proxy sees all API traffic,** including the auth header. It forwards the header and does not store it. It stores the dropped outputs on disk under `COMPACTIO_HOME`.

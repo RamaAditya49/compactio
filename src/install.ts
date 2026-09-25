@@ -176,7 +176,7 @@ export async function setup(): Promise<string> {
       "compactio filter: on (local mode, no key).",
       "To let Jev decide and to turn on the Sweep, you need one API key:",
       "  1. Get a key: https://console.typesafe.ai/keys or https://openrouter.ai/keys",
-      "  2. In a terminal, run: npx compactio key   (the key stays hidden and goes only into ~/.claude/settings.json)",
+      "  2. In a terminal, run: npx compactio key   (the key stays hidden and is saved in your Claude Code settings)",
       "  3. Run /compactio:setup again.",
     ].join("\n");
   }
