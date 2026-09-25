@@ -11,6 +11,10 @@ export const MIN_LOSSY_CHARS = 6_000; // below this, only lossless filters run
 export const LOCAL_MAX_CHARS = 24_000; // without Jev, cut outputs above this to head+tail
 export const MIN_CONFIDENCE = 0.6; // below this, keep the full output
 
+// Files an agent reads but does not edit: logs, data dumps, lockfiles, minified bundles.
+export const DATA_FILE =
+  /(\.(log|out|jsonl|ndjson|csv|tsv|map)|\.min\.(js|css)|(^|[\\/])(package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lock|Cargo\.lock|composer\.lock|poetry\.lock|Gemfile\.lock|go\.sum))$/i;
+
 type Event = {
   session_id: string;
   agent_id?: string;
@@ -48,6 +52,8 @@ export async function postTool(ev: Event, env = process.env): Promise<unknown | 
   const resp = ev.tool_response as any;
   if (!resp || resp.isImage) return;
   if (ev.tool_name === "Bash" && String(ev.tool_input?.command ?? "").includes("compactio")) return;
+  // Images, PDFs, notebooks: the largest string is base64 or cell JSON, not text. Never cut, never counted.
+  if (ev.tool_name === "Read" && resp.type && resp.type !== "text") return;
   const hit = largestString(resp);
   if (!hit || hit.text.length < MIN_CHARS) return;
 
@@ -60,11 +66,12 @@ export async function postTool(ev: Event, env = process.env): Promise<unknown | 
   };
 
   // Claude Code saves big outputs to tool-results/ and the agent reads them back:
-  // that is tool output, not code, so it takes the normal filter path.
-  const savedOutput = /[\\/]\.claude[\\/]projects[\\/].+[\\/]tool-results[\\/]/.test(String(ev.tool_input?.file_path ?? ""));
+  // that is tool output, not code, so it takes the normal filter path. Data files too.
+  const file = String(ev.tool_input?.file_path ?? "");
+  const savedOutput = /[\\/]\.claude[\\/]projects[\\/].+[\\/]tool-results[\\/]/.test(file);
 
   // Read: never cut code the agent may edit. Only skip exact re-reads.
-  if (ev.tool_name === "Read" && !savedOutput) {
+  if (ev.tool_name === "Read" && !savedOutput && !DATA_FILE.test(file)) {
     const i = ev.tool_input ?? {};
     const key = [ev.agent_id ?? "main", i.file_path, i.offset ?? "", i.limit ?? "", i.pages ?? ""].join("|");
     const hash = createHash("sha256").update(original).digest("hex");

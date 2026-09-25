@@ -119,3 +119,27 @@ test("Read of a saved Claude Code tool output is filtered like Bash", async () =
 test("compactio's own show command is never filtered", async () => {
   assert.equal(await postTool(bash(big(3000), "node cli.ts show abc # compactio"), {}), undefined);
 });
+
+test("Read of a data file (log, lockfile) is filtered like Bash", async () => {
+  const content = big(3000);
+  const read = {
+    session_id: "s4",
+    tool_name: "Read",
+    tool_input: { file_path: "/repo/build/output.log" },
+    tool_response: { type: "text", file: { filePath: "/repo/build/output.log", content, numLines: 3000, startLine: 1, totalLines: 3000 } },
+  };
+  const out: any = await postTool(read, {});
+  assert.match(out.hookSpecificOutput.updatedToolOutput.file.content, /kept "headtail"/);
+});
+
+test("Read of an image passes untouched and is not counted", async () => {
+  const n = store.readLog().length;
+  const read = {
+    session_id: "s5",
+    tool_name: "Read",
+    tool_input: { file_path: "/a.png" },
+    tool_response: { type: "image", file: { base64: "A".repeat(500_000), type: "image/png", originalSize: 375_000 } },
+  };
+  assert.equal(await postTool(read, {}), undefined);
+  assert.equal(store.readLog().length, n);
+});

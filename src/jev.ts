@@ -43,28 +43,42 @@ export function endpoint(env: Record<string, string | undefined>): Endpoint | un
   return undefined;
 }
 
-export async function decide(state: unknown, levels: Level[], ep: Endpoint, timeoutMs: number): Promise<Decision> {
-  const criteria = Object.fromEntries(levels.map((l) => [l, CRITERIA[l]]));
+export type Answer = { choice: string; confidence: number };
+
+// One request, many questions: Jev answers them in parallel.
+export async function ask(
+  state: unknown,
+  questions: Record<string, unknown>,
+  ep: Endpoint,
+  timeoutMs: number,
+): Promise<{ answers: Record<string, Answer>; inputTokens: number }> {
   const res = await fetch(ep.url, {
     method: "POST",
     headers: { ...ep.headers, authorization: `Bearer ${ep.key}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model: ep.model,
-      state,
-      questions: {
-        keep: {
-          type: "choice",
-          instructions:
-            "A coding agent ran a tool while it works on `goal`. How much of the tool output must the agent keep in its context to continue the task?",
-          criteria,
-        },
-      },
-    }),
+    body: JSON.stringify({ model: ep.model, state, questions }),
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`jev ${ep.provider} http ${res.status}`);
-  const body = (await res.json()) as { answers: { keep: { choice: Level; confidence: number } }; usage?: { input_tokens?: number } };
-  const a = body.answers.keep;
-  if (!levels.includes(a.choice)) throw new Error(`jev unknown choice ${a.choice}`);
-  return { level: a.choice, confidence: a.confidence, inputTokens: body.usage?.input_tokens ?? 0 };
+  const body = (await res.json()) as { answers: Record<string, Answer>; usage?: { input_tokens?: number } };
+  return { answers: body.answers, inputTokens: body.usage?.input_tokens ?? 0 };
+}
+
+export async function decide(state: unknown, levels: Level[], ep: Endpoint, timeoutMs: number): Promise<Decision> {
+  const criteria = Object.fromEntries(levels.map((l) => [l, CRITERIA[l]]));
+  const { answers, inputTokens } = await ask(
+    state,
+    {
+      keep: {
+        type: "choice",
+        instructions:
+          "A coding agent ran a tool while it works on `goal`. How much of the tool output must the agent keep in its context to continue the task?",
+        criteria,
+      },
+    },
+    ep,
+    timeoutMs,
+  );
+  const a = answers.keep;
+  if (!levels.includes(a.choice as Level)) throw new Error(`jev unknown choice ${a.choice}`);
+  return { level: a.choice as Level, confidence: a.confidence, inputTokens };
 }
