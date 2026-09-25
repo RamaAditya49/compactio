@@ -169,11 +169,14 @@ npx compactio proxy 8787
 
 ```jsonc
 {
+  "model": "claude-opus-5-5[1m]",
   "env": {
     "ANTHROPIC_BASE_URL": "http://127.0.0.1:8787"
   }
 }
 ```
+
+Keep the `[1m]` suffix on the model name. With a custom `ANTHROPIC_BASE_URL`, Claude Code 2.1.282 did not use the 1M context window. It compacted again and again ("Autocompact is thrashing"), also through a plain proxy without compactio. The suffix fixed it.
 
 To stop the Sweep, remove `ANTHROPIC_BASE_URL` first, then stop the proxy.
 
@@ -285,7 +288,8 @@ Read these before you use compactio. They are the limits of the design, not bugs
 - **Each sweep costs one cache rewrite.** The cache gate estimates the cost with a fixed number of turns left (`COMPACTIO_SWEEP_TURNS`). If the session ends sooner, the sweep costs more than it saves.
 - **A tombstone is permanent.** A dropped result stays dropped for the whole session. The agent must run the tool again or run `compactio show <id>`.
 - **The proxy sees all API traffic,** including the auth header. It forwards the header and does not store it. It stores the dropped outputs on disk under `COMPACTIO_HOME`.
-- **Tested with a fake API and a fake Jev.** One real Claude Code request went through the proxy with a subscription login and got the API's own answer back. A full real session through the proxy is not tested yet.
+- **Set the context window yourself.** Behind a custom `ANTHROPIC_BASE_URL`, Claude Code does not detect the 1M window. Use a model name with `[1m]`, or autocompact runs in a loop.
+- **Test coverage.** Unit tests use a fake API and a fake Jev. One real Claude Code session (Opus 5.5, subscription login) ran through the proxy with 3 reads and 8 shell calls. Jev rated the old reads in 0.7 s. Longer real sessions are not tested yet.
 
 **Limits of the numbers**
 
