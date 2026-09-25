@@ -200,3 +200,27 @@ test("desktop note shows only in a desktop session that bypasses the proxy", asy
   assert.equal(desktopNote({ CLAUDE_CODE_ENTRYPOINT: "claude-desktop", ANTHROPIC_BASE_URL: "http://127.0.0.1:8787" }), "");
   assert.equal(desktopNote({ CLAUDE_CODE_ENTRYPOINT: "cli", ANTHROPIC_BASE_URL: "https://api.anthropic.com" }), "");
 });
+
+test("setup in the desktop app keeps the Sweep off and changes no settings", async () => {
+  const { setup } = await import("../src/install.ts");
+  const home = mkdtempSync(join(tmpdir(), "compactio-home-"));
+  const saved = { HOME: process.env.HOME, E: process.env.CLAUDE_CODE_ENTRYPOINT, K: process.env.TYPESAFE_API_KEY };
+  Object.assign(process.env, { HOME: home, CLAUDE_CODE_ENTRYPOINT: "claude-desktop", TYPESAFE_API_KEY: "k-test" });
+  const out = await setup();
+  process.env.HOME = saved.HOME;
+  if (saved.E === undefined) delete process.env.CLAUDE_CODE_ENTRYPOINT; else process.env.CLAUDE_CODE_ENTRYPOINT = saved.E;
+  if (saved.K === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = saved.K;
+  assert.match(out, /Sweep: not turned on/);
+  const { existsSync } = await import("node:fs");
+  assert.equal(existsSync(join(home, ".claude", "settings.json")), false);
+});
+
+test("gain ignores image reads logged by old versions", async () => {
+  const { gain } = await import("../src/cli.ts");
+  const row = { ts: "", sid: "s", engine: "dedupe", level: "full", ms: 0 } as const;
+  const out = gain([
+    { ...row, tool: "Read", before: 600_000, after: 600_000 },
+    { ...row, tool: "Bash", engine: "local", level: "headtail", before: 10_000, after: 1_000 },
+  ] as any);
+  assert.match(out, /Outputs cut\s+1 of 1 /);
+});
