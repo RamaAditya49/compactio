@@ -1,5 +1,6 @@
 // Claude Code hook entry. Usage: node hook.ts <post-tool|prompt|reset> < event.json
 import { createHash, randomUUID } from "node:crypto";
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { apply, hasErrors, lossless, preview, type Level } from "./filters.ts";
 import { decide, endpoint } from "./jev.ts";
@@ -150,7 +151,7 @@ async function main(): Promise<void> {
   if (out) process.stdout.write(JSON.stringify(out));
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   // Fail open: compactio must never break the agent.
   main().catch((e) => {
     process.stderr.write(`compactio: ${e?.message ?? e}\n`);
