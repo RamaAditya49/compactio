@@ -12,23 +12,26 @@ export const PORT = 8787;
 const UNIT = "compactio-proxy.service";
 
 // Behind a custom base URL, Claude Code does not know the model's window and compacts in a
-// loop. This flag restores the old behavior: compact when the API says the prompt is too long.
+// loop. The "[1m]" suffix tells it the window. Mapping the opus alias keeps the model picker.
+// ponytail: pinned to Opus 5.5; update when a new Opus ships.
 export const ENV = (port: number) => ({
   ANTHROPIC_BASE_URL: `http://127.0.0.1:${port}`,
-  CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT: "1",
+  ANTHROPIC_DEFAULT_OPUS_MODEL: "claude-opus-5-5[1m]",
 });
 
 const settingsFile = () => join(homedir(), ".claude", "settings.json");
 const unitFile = () => join(homedir(), ".config", "systemd", "user", UNIT);
 
+// The base URL is ours. A model mapping the user set stays.
 export function withEnv(settings: any, env: Record<string, string>): any {
-  return { ...settings, env: { ...(settings.env ?? {}), ...env } };
+  return { ...settings, env: { ...env, ...(settings.env ?? {}), ANTHROPIC_BASE_URL: env.ANTHROPIC_BASE_URL } };
 }
 
-export function withoutEnv(settings: any, keys: string[]): any {
-  const env = { ...(settings.env ?? {}) };
-  for (const k of keys) delete env[k];
-  return { ...settings, env };
+// Remove only the values that are still ours.
+export function withoutEnv(settings: any, env: Record<string, string>): any {
+  const out = { ...(settings.env ?? {}) };
+  for (const [k, v] of Object.entries(env)) if (out[k] === v) delete out[k];
+  return { ...settings, env: out };
 }
 
 export function unit(node: string, cli: string, port: number): string {
@@ -89,7 +92,7 @@ export async function on(port = PORT): Promise<string> {
 
 export function off(): string {
   // Settings first, so that no new session points at a stopped proxy.
-  writeSettings(withoutEnv(readSettings(), Object.keys(ENV(PORT))));
+  writeSettings(withoutEnv(readSettings(), ENV(PORT)));
   try {
     systemctl("disable", "--now", UNIT);
   } catch {}
