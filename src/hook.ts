@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { apply, hasErrors, lossless, preview, type Level } from "./filters.ts";
 import { decide, endpoint } from "./jev.ts";
+import { ensure } from "./install.ts";
 import { redact } from "./redact.ts";
 import * as store from "./store.ts";
 
@@ -140,6 +141,11 @@ async function main(): Promise<void> {
   const mode = process.argv[2];
   if (mode === "prompt") return prompt(ev);
   if (mode === "reset") return store.clearReads(ev.session_id);
+  if (mode === "start") {
+    const warning = await ensure();
+    if (warning) process.stdout.write(JSON.stringify({ systemMessage: warning }));
+    return;
+  }
   const out = await postTool(ev);
   if (out) process.stdout.write(JSON.stringify(out));
 }

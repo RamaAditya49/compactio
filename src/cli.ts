@@ -67,7 +67,12 @@ if (process.argv[1] !== fileURLToPath(import.meta.url)) {
     console.error(`compactio: ${e.message ?? e}`);
     process.exit(1);
   });
+} else if (cmd === "setup" || cmd === "key") {
+  (cmd === "setup" ? install.setup() : install.key()).then(console.log, (e) => {
+    console.error(`compactio: ${e.message ?? e}`);
+    process.exit(1);
+  });
 } else if (cmd) {
-  process.stderr.write("usage: compactio show <id> | compactio gain [session-id] | compactio proxy [port] | compactio sweep on|off|status\n");
+  process.stderr.write("usage: compactio show <id> | compactio gain [session-id] | compactio proxy [port] | compactio sweep on|off|status | compactio setup | compactio key\n");
   process.exit(1);
 }

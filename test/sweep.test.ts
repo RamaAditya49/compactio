@@ -176,3 +176,20 @@ test("proxy answers its health check without the upstream", async () => {
   proxy.close();
   assert.equal(await res.text(), "ok");
 });
+
+test("quit without the compactio header is forwarded, not obeyed", async () => {
+  const { QUIT } = await import("../src/sweep.ts");
+  const proxy = serve(0, { COMPACTIO_UPSTREAM: "http://127.0.0.1:1" });
+  await new Promise((r) => proxy.once("listening", r));
+  const res = await fetch(`http://127.0.0.1:${(proxy.address() as any).port}${QUIT}`, { method: "POST" });
+  proxy.close();
+  assert.equal(res.status, 502);
+});
+
+test("the session guard stays quiet when Claude Code does not use the proxy", async () => {
+  const { ensure, keyEnv } = await import("../src/install.ts");
+  assert.equal(await ensure({ ANTHROPIC_BASE_URL: "https://api.anthropic.com" }), undefined);
+  assert.equal(await ensure({}), undefined);
+  assert.deepEqual(keyEnv("sk-or-v1-abc"), { OPENROUTER_API_KEY: "sk-or-v1-abc" });
+  assert.deepEqual(keyEnv("ts-abc"), { TYPESAFE_API_KEY: "ts-abc" });
+});
