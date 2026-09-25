@@ -1,0 +1,9 @@
+{
+  "name": "compactio",
+  "version": "0.0.1",
+  "description": "Cut agent token use with Jev. Plugin for Claude Code, Codex, and other coding agents. Work in progress.",
+  "keywords": ["claude-code", "codex", "agent", "tokens", "compaction", "jev", "typesafe"],
+  "author": "Rama Aditya",
+  "license": "MIT",
+  "files": ["README.md"]
+}
