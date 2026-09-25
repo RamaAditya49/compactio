@@ -188,5 +188,13 @@ export async function setup(): Promise<string> {
       "  3. Run /compactio:setup again.",
     ].join("\n");
   }
-  return `compactio filter: on, decisions by Jev.\n${await on()}${desktopNote()}`;
+  // The desktop app does not use the proxy: a proxy there only adds a way to fail for terminal sessions.
+  if (process.env.CLAUDE_CODE_ENTRYPOINT === "claude-desktop") {
+    return [
+      "compactio filter: on, decisions by Jev.",
+      "Sweep: not turned on. The Claude desktop app sets its own API address, so the Sweep cannot run here.",
+      "To use the Sweep in `claude` sessions in a terminal, run /compactio:sweep on there.",
+    ].join("\n");
+  }
+  return `compactio filter: on, decisions by Jev.\n${await on()}`;
 }

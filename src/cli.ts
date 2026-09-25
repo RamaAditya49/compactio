@@ -17,7 +17,9 @@ const bar = (part: number, width = 20) => "█".repeat(Math.round(part * width))
 export function gain(entries: store.LogEntry[], sid?: string): string {
   // Sweep "judge" rows are Jev calls, not outputs: count their cost, not their size.
   const all = sid ? entries.filter((e) => e.sid === sid) : entries;
-  const rows = all.filter((e) => e.level !== "judge");
+  // Before 0.2.0, a Read of an image was logged with its base64 size. A text Read never gets
+  // this big (Claude Code caps it near 100k characters), so those rows are not tool output.
+  const rows = all.filter((e) => e.level !== "judge" && !(e.tool === "Read" && e.before > 150_000));
   const cut = rows.filter((e) => e.after < e.before);
   const before = rows.reduce((a, e) => a + e.before, 0);
   const saved = rows.reduce((a, e) => a + e.before - e.after, 0);

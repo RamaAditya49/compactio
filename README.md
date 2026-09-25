@@ -307,6 +307,22 @@ Claude Code today. Codex CLI, OpenCode, Gemini CLI, Cursor, and Trae are next. S
 - Claude Code already limits Bash output to 30,000 characters. On one Bash call, compactio saves at most about 7,500 tokens. The agent then carries that saving through every later turn.
 - We make no claim about the total bill until the public benchmark (task success, tokens, and cost) exists.
 
+**Replay on real sessions** (`node scripts/replay.ts --jev`). The 10 largest Claude Code sessions of the author, from before compactio, ran through the filter:
+
+| | Tokens | Share |
+|---|---|---|
+| Tool output (text) | ~2.52M | 44% of context |
+| Kept out by the filter, with Jev | ~44k | **1.7% of tool output**, 0.8% of context |
+| Kept out by the filter, local mode | ~29k | 1.2% of tool output |
+
+Why the filter saves little in these sessions:
+
+- 43% of the tool text came from outputs below 2,000 characters. The filter does not touch them.
+- 24% came from outputs of 2,000 to 6,000 characters. Only the lossless clean runs on them.
+- For most larger outputs, Jev answered `full`. compactio keeps the full output when Jev is not sure.
+
+The Sweep acts on old output instead. In one real test session, the goal changed, and the Sweep dropped 3 old reads: 98,031 → 879 characters. That saving repeats on every later turn. It is one session, not a benchmark.
+
 ## Limitations
 
 Read these before you use compactio. They are the limits of the design, not bugs.
@@ -369,6 +385,7 @@ git clone https://github.com/RamaAditya49/compactio.git
 cd compactio
 node --test test/*.test.ts     # tests
 node scripts/assets.mjs        # regenerate the README images
+node scripts/replay.ts --jev   # replay your own Claude Code sessions through the filter
 ```
 
 Use your local copy in Claude Code:
