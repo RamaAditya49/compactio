@@ -157,9 +157,14 @@ test("sweep on/off edits only its own settings keys, and the unit runs the copie
   const before = { model: "opus", env: { TYPESAFE_API_KEY: "k" }, hooks: {} };
   const on = withEnv(before, ENV(8787));
   assert.equal(on.env.ANTHROPIC_BASE_URL, "http://127.0.0.1:8787");
+  assert.equal(on.env.ANTHROPIC_DEFAULT_OPUS_MODEL, "claude-opus-5-5[1m]");
   assert.equal(on.env.TYPESAFE_API_KEY, "k");
   assert.equal(on.model, "opus");
-  assert.deepEqual(withoutEnv(on, Object.keys(ENV(8787))), before);
+  assert.deepEqual(withoutEnv(on, ENV(8787)), before);
+  // A model mapping the user set is kept on "on" and on "off".
+  const own = withEnv({ env: { ANTHROPIC_DEFAULT_OPUS_MODEL: "my-opus" } }, ENV(8787));
+  assert.equal(own.env.ANTHROPIC_DEFAULT_OPUS_MODEL, "my-opus");
+  assert.deepEqual(withoutEnv(own, ENV(8787)).env, { ANTHROPIC_DEFAULT_OPUS_MODEL: "my-opus" });
   assert.match(unit("/usr/bin/node", "/h/.compactio/bin/cli.js", 8787), /ExecStart=\/usr\/bin\/node \/h\/.compactio\/bin\/cli.js proxy 8787\nRestart=always/);
 });
 
