@@ -92,6 +92,18 @@ test("Read: second identical read is skipped, third comes back in full", async (
   assert.equal(await postTool(read, {}), undefined);
 });
 
+test("Read of a saved Claude Code tool output is filtered like Bash", async () => {
+  const content = big(3000);
+  const read = {
+    session_id: "s3",
+    tool_name: "Read",
+    tool_input: { file_path: "/home/u/.claude/projects/p/abc/tool-results/x.txt" },
+    tool_response: { type: "text", file: { filePath: "/x", content, numLines: 3000, startLine: 1, totalLines: 3000 } },
+  };
+  const out: any = await postTool(read, {});
+  assert.match(out.hookSpecificOutput.updatedToolOutput.file.content, /kept "headtail"/);
+});
+
 test("compactio's own show command is never filtered", async () => {
   assert.equal(await postTool(bash(big(3000), "node cli.ts show abc # compactio"), {}), undefined);
 });

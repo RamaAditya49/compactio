@@ -59,8 +59,12 @@ export async function postTool(ev: Event, env = process.env): Promise<unknown | 
     return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: setAt(resp, hit.path, text) } };
   };
 
+  // Claude Code saves big outputs to tool-results/ and the agent reads them back:
+  // that is tool output, not code, so it takes the normal filter path.
+  const savedOutput = /[\\/]\.claude[\\/]projects[\\/].+[\\/]tool-results[\\/]/.test(String(ev.tool_input?.file_path ?? ""));
+
   // Read: never cut code the agent may edit. Only skip exact re-reads.
-  if (ev.tool_name === "Read") {
+  if (ev.tool_name === "Read" && !savedOutput) {
     const i = ev.tool_input ?? {};
     const key = [ev.agent_id ?? "main", i.file_path, i.offset ?? "", i.limit ?? "", i.pages ?? ""].join("|");
     const hash = createHash("sha256").update(original).digest("hex");
