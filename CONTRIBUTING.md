@@ -29,3 +29,11 @@ Node 22.18 or later runs the TypeScript sources directly. No build step is neces
 ## Numbers
 
 If a change claims a saving, include how you measured it. Label example numbers as examples.
+
+## Releases (maintainers)
+
+1. Set the new version in `package.json` and `.claude-plugin/plugin.json`.
+2. Commit, then tag: `git tag -a vX.Y.Z -m "compactio X.Y.Z"`.
+3. Push the tag: `git push origin vX.Y.Z`.
+
+CI runs the tests, builds `dist/`, and publishes to npm with provenance through npm Trusted Publishing. No npm token is stored in GitHub.
