@@ -96,7 +96,12 @@ export async function postTool(ev: Event, env = process.env): Promise<unknown | 
         tool_input: redact(JSON.stringify(ev.tool_input ?? {})).slice(0, 600),
         output: Object.fromEntries(Object.entries(preview(text)).map(([k, v]) => [k, typeof v === "string" ? redact(v) : v])),
       };
-      const d = await decide(state, levels, { key, timeoutMs: Number(env.COMPACTIO_TIMEOUT_MS ?? 1500) });
+      const d = await decide(state, levels, {
+        key,
+        timeoutMs: Number(env.COMPACTIO_TIMEOUT_MS ?? 1500),
+        url: env.COMPACTIO_JEV_URL,
+        model: env.COMPACTIO_JEV_MODEL,
+      });
       engine = "jev";
       extra.jevTokens = d.inputTokens;
       level = d.confidence >= MIN_CONFIDENCE ? d.level : "full";

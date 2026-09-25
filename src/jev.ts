@@ -12,13 +12,13 @@ const CRITERIA: Record<Level, string> = {
 
 export type Decision = { level: Level; confidence: number; inputTokens: number };
 
-export async function decide(state: unknown, levels: Level[], opts: { key: string; timeoutMs: number }): Promise<Decision> {
+export async function decide(state: unknown, levels: Level[], opts: { key: string; timeoutMs: number; url?: string; model?: string }): Promise<Decision> {
   const criteria = Object.fromEntries(levels.map((l) => [l, CRITERIA[l]]));
-  const res = await fetch(process.env.COMPACTIO_JEV_URL ?? "https://api.typesafe.ai/v1/systemone", {
+  const res = await fetch(opts.url ?? "https://api.typesafe.ai/v1/systemone", {
     method: "POST",
     headers: { authorization: `Bearer ${opts.key}`, "content-type": "application/json" },
     body: JSON.stringify({
-      model: process.env.COMPACTIO_JEV_MODEL ?? "jev-1.13.0",
+      model: opts.model ?? "jev-1.13.0",
       state,
       questions: {
         keep: {
