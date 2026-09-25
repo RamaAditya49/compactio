@@ -112,10 +112,11 @@ It runs after the tool finishes and before the model sees the output.
 4. **Low confidence → `full`.** Keeping too much costs less than dropping too much.
 5. The original output stays on disk. The model can get it back with `compactio show <id>`.
 
-Code files from `Read` are never cut, because the agent may edit them. Small outputs (< 2 KB)
+Code files from `Read` are never cut, because the agent may edit them. Data files (logs, CSV,
+JSONL, lockfiles, minified bundles) take the filter path. Images, PDFs, and notebooks are skipped. Small outputs (< 2 KB)
 pass untouched. The saving comes from big outputs.
 
-### 4.2 Sweep (old context): v0.3
+### 4.2 Sweep (old context): v0.3, shipped as an opt-in proxy (`compactio proxy`)
 
 It runs every N turns, not every turn.
 
