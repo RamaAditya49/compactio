@@ -280,6 +280,7 @@ Read these before you use compactio. They are the limits of the design, not bugs
 **Limits of the Sweep proxy**
 
 - **Claude Code cannot reach the API when the proxy is down.** The proxy fails open for its own errors, but not for a stopped process. The session guard starts it at the start of a session, and systemd starts it after a crash on Linux. A proxy that stops in the middle of a session on macOS or Windows stays down until the next session. Use `compactio sweep off`, not `systemctl stop`, to turn it off.
+- **The Claude desktop app does not use the Sweep.** It sets its own API address for its sessions, over `~/.claude/settings.json`. The Sweep runs in `claude` sessions in a terminal. The filter runs everywhere.
 - **macOS and Windows are not tested.** The background-process path is tested on Linux only.
 - **The key step needs a terminal.** A key typed into the Claude Code chat goes into the conversation, so `/compactio:setup` does not take a key.
 - **Each sweep costs one cache rewrite.** The cache gate estimates the cost with a fixed number of turns left (`COMPACTIO_SWEEP_TURNS`). If the session ends sooner, the sweep costs more than it saves.

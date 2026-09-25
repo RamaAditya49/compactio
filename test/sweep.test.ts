@@ -193,3 +193,10 @@ test("the session guard stays quiet when Claude Code does not use the proxy", as
   assert.deepEqual(keyEnv("sk-or-v1-abc"), { OPENROUTER_API_KEY: "sk-or-v1-abc" });
   assert.deepEqual(keyEnv("ts-abc"), { TYPESAFE_API_KEY: "ts-abc" });
 });
+
+test("desktop note shows only in a desktop session that bypasses the proxy", async () => {
+  const { desktopNote } = await import("../src/install.ts");
+  assert.match(desktopNote({ CLAUDE_CODE_ENTRYPOINT: "claude-desktop", ANTHROPIC_BASE_URL: "https://api.anthropic.com" }), /desktop app/);
+  assert.equal(desktopNote({ CLAUDE_CODE_ENTRYPOINT: "claude-desktop", ANTHROPIC_BASE_URL: "http://127.0.0.1:8787" }), "");
+  assert.equal(desktopNote({ CLAUDE_CODE_ENTRYPOINT: "cli", ANTHROPIC_BASE_URL: "https://api.anthropic.com" }), "");
+});

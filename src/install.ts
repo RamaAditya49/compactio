@@ -105,6 +105,7 @@ export async function on(port = PORT): Promise<string> {
   const src = dirname(fileURLToPath(import.meta.url));
   const ext = import.meta.url.endsWith(".ts") ? ".ts" : ".js";
   for (const f of readdirSync(src).filter((f) => f.endsWith(ext))) copyFileSync(join(src, f), join(bin, f));
+  writeFileSync(join(bin, "package.json"), '{ "type": "module" }\n');
   if (process.platform === "linux") {
     mkdirSync(dirname(unitFile()), { recursive: true });
     writeFileSync(unitFile(), unit(process.execPath, join(bin, `cli${ext}`), port));
@@ -133,12 +134,19 @@ export function off(): string {
   return "Sweep is off. Restart Claude Code sessions that are still open.";
 }
 
+// The Claude desktop app sets its own API address for its sessions, over the settings file.
+export function desktopNote(env: Record<string, string | undefined> = process.env, port = PORT): string {
+  const ours = ENV(port).ANTHROPIC_BASE_URL;
+  if (env.CLAUDE_CODE_ENTRYPOINT !== "claude-desktop" || !env.ANTHROPIC_BASE_URL || env.ANTHROPIC_BASE_URL === ours) return "";
+  return "\nNote: the Claude desktop app sets its own API address, so the Sweep does not run in desktop sessions. It runs in `claude` sessions in a terminal. The filter runs in both.";
+}
+
 export async function status(port = PORT): Promise<string> {
   const env = readSettings().env ?? {};
   const up = await healthy(port);
   const set = env.ANTHROPIC_BASE_URL === ENV(port).ANTHROPIC_BASE_URL;
   const warn = set && !up ? "\nWARNING: Claude Code points at the proxy, but the proxy does not answer. Run `compactio sweep on` or `compactio sweep off`." : "";
-  return `proxy ${up ? "running" : "stopped"} on 127.0.0.1:${port} · Claude Code settings ${set ? "point at it" : "do not point at it"}${warn}`;
+  return `proxy ${up ? "running" : "stopped"} on 127.0.0.1:${port} · Claude Code settings ${set ? "point at it" : "do not point at it"}${warn}${desktopNote()}`;
 }
 
 // The Jev key: from the environment (Claude Code passes its settings env to commands) or the settings file.
@@ -180,5 +188,5 @@ export async function setup(): Promise<string> {
       "  3. Run /compactio:setup again.",
     ].join("\n");
   }
-  return `compactio filter: on, decisions by Jev.\n${await on()}`;
+  return `compactio filter: on, decisions by Jev.\n${await on()}${desktopNote()}`;
 }
